@@ -51,3 +51,29 @@
 
     (vector-push-extend s path)
     path))
+
+(defun 2-opt-tsp (distances)
+  (let* ((best-path (greedy-tsp distances))
+	 (best-dist (calc-dist best-path distances))
+	 (size (length best-path)))
+    (loop :with modified = t :while modified :do
+       (setf modified nil)
+       (loop :for i :from 1 :below (- size 2) :do
+	  (loop :for j :from (+ i 1) :below (- size 1) :do
+	     (let* ((new-path (2-opt-swap best-path i j))
+		    (new-dist (calc-dist new-path distances)))
+	       (when (< new-dist best-dist)
+		 (setf best-path new-path
+		       best-dist new-dist
+		       modified  t))))))
+    (values best-path best-dist)))
+
+(defun 2-opt-swap (path x y)
+  (let ((new-path (make-array 0 :adjustable t :fill-pointer 0)))
+    (loop :for i :from 0 :below x :do
+       (vector-push-extend (aref path i) new-path))
+    (loop :for i :downfrom y :to x :do
+       (vector-push-extend (aref path i) new-path))
+    (loop :for i :from (1+ y) :below (length path) :do
+       (vector-push-extend (aref path i) new-path))
+    new-path))
